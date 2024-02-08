@@ -1,7 +1,7 @@
 <template>
   <div>
     <div
-      class="flex items-center justify-center mb-4 text-3xl font-bold text-gray-900 dark:text-white md:text-5xl lg:text-6xl">
+      class="flex items-center justify-center mb-4 text-3xl font-bold text-gray-900 md:text-5xl lg:text-6xl">
       Email - <span class="text-transparent bg-clip-text bg-gradient-to-r bg-blue-700 from-sky-400">UI</span>
       <svg class="w-18 h-16 ml-5 mr-2 fill-current text-blue-700" xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 58.064 58.064">
@@ -51,7 +51,7 @@
               </thead>
 
               <tbody class="bg-white">
-                <tr v-for="(email, index) in emails" :key="index" @click="showEmailDetail(email)" class="w-full">
+                <tr v-for="(email, index) in emails" :key="index" class="w-full">
                   <td class="px-6 py-4 border-b border-gray-200 whitespace-nowrap">
                     <div class="flex items-center">
 
@@ -86,7 +86,8 @@
                   </td>
                   <td
                     class="px-6 py-4 text-sm font-medium leading-5 text-right border-b border-gray-200 whitespace-nowrap">
-                    <a href="#" class="text-indigo-600 hover:text-indigo-900">View</a>
+                    <a class="text-indigo-600 hover:text-indigo-900 cursor-pointer"
+                      @click="showEmailDetail(email)">View</a>
                   </td>
                 </tr>
               </tbody>
@@ -95,7 +96,29 @@
 
         </div>
       </div>
-
+      <div v-if="isModalOpen"
+        class="fixed inset-0 z-50 overflow-auto bg-black bg-opacity-50 flex items-center justify-center">
+        <div class="bg-white p-8 rounded shadow-lg sm:w-[90%] md:w-[80%] lg:w-[70%] xl:w-[60%]">
+          <h2 class="text-xl mb-4 font-bold"> {{ selectedEmail._source.subject }} </h2>
+          <div class="flex justify-between mb-4">
+            <div>
+              <p class="font-bold">From:</p>
+              <p>{{ selectedEmail._source.from }}</p>
+            </div>
+            <div>
+              <p class="font-bold">To:</p>
+              <p class="truncate">{{ selectedEmail._source.to.slice(0, 50) }}</p>
+            </div>
+            <div>
+              <p class="font-bold">Date:</p>
+              <p>{{ selectedEmail._source.date }}</p>
+            </div>
+          </div>
+          <hr class="my-4 border-t-2 border-gray-300">
+          <p class="overflow-y-auto max-h-[600px]">{{ selectedEmail._source.content }}</p>
+          <button @click="closeModal" class="text-indigo-600 hover:text-indigo-900 cursor-pointer">Cerrar</button>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -106,6 +129,8 @@ import { ref } from 'vue';
 const inputSearch = ref('');
 const searched = ref(false);
 const emails = ref([]);
+const isModalOpen = ref(false);
+const selectedEmail = ref(null);
 
 const searchEmails = async () => {
   try {
@@ -138,6 +163,11 @@ const searchEmails = async () => {
 };
 
 const showEmailDetail = (email) => {
-  console.log('Mostrar detalle de correo:', email._source);
+  selectedEmail.value = email;
+  isModalOpen.value = true;
+};
+
+const closeModal = () => {
+  isModalOpen.value = false;
 };
 </script>
