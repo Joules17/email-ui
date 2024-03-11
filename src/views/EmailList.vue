@@ -1,7 +1,6 @@
 <template>
   <div>
-    <div
-      class="flex items-center justify-center mb-4 text-3xl font-bold text-gray-900 md:text-5xl lg:text-6xl">
+    <div class="flex items-center justify-center mb-4 text-3xl font-bold text-gray-900 md:text-5xl lg:text-6xl">
       Email - <span class="text-transparent bg-clip-text bg-gradient-to-r bg-blue-700 from-sky-400">UI</span>
       <svg class="w-18 h-16 ml-5 mr-2 fill-current text-blue-700" xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 58.064 58.064">
@@ -58,11 +57,11 @@
                       <div class="ml-4">
                         <div class="text-sm font-medium leading-5 text-gray-900">
                           {{ email._source.from.length > 100 ? email._source.content.slice(0, 30) + '...' :
-                            email._source.from }}
+      email._source.from }}
                         </div>
                         <div class="text-sm leading-5 text-gray-500">
                           {{ email._source.to.length > 100 ? email._source.content.slice(0, 30) + '...' :
-                            email._source.to }}
+      email._source.to }}
                         </div>
                       </div>
                     </div>
@@ -71,11 +70,11 @@
                   <td class="px-6 py-4 border-b border-gray-200 whitespace-nowrap">
                     <div class="text-sm font-medium leading-5 text-gray-900">
                       {{ email._source.subject.length > 0 ? (email._source.subject.length > 100 ?
-                        email._source.subject.slice(0, 40) + '...' : email._source.subject) : 'NO SUBJECT' }}
+      email._source.subject.slice(0, 40) + '...' : email._source.subject) : 'NO SUBJECT' }}
                     </div>
                     <div class="text-sm leading-5 text-gray-500">
                       {{ email._source.content.length > 100 ? email._source.content.slice(0, 50) + '...' :
-                        email._source.content }}
+      email._source.content }}
                     </div>
                   </td>
 
@@ -94,6 +93,38 @@
             </table>
           </div>
 
+        </div>
+      </div>
+      <div class="flex flex-col items-center">
+        <span class="text-sm text-gray-700 dark:text-gray-400">
+          Showing <span class="font-semibold text-gray-900 dark:text-white">{{ (currentPage * pageSize) + 1 }}</span> to <span
+            class="font-semibold text-gray-900 dark:text-white">{{ Math.min((currentPage + 1) * pageSize, totalPages) }} </span> of <span
+            class="font-semibold text-gray-900 dark:text-white">{{ totalPages }}</span> Entries
+        </span>
+        <div class="inline-flex mt-2 xs:mt-0">
+          <!-- Buttons -->
+          <button
+            @click="changePage(currentPage - 1)"
+            :disabled="currentPage === 0"
+            class="flex items-center justify-center px-3 h-8 text-sm font-medium text-white bg-gray-800 rounded-s hover:bg-gray-900 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">
+            <svg class="w-3.5 h-3.5 me-2 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+              fill="none" viewBox="0 0 14 10">
+              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M13 5H1m0 0 4 4M1 5l4-4" />
+            </svg>
+            Prev
+          </button>
+          <button
+            @click="changePage(currentPage + 1)"
+            :disabled="currentPage === totalPages - 1"
+            class="flex items-center justify-center px-3 h-8 text-sm font-medium text-white bg-gray-800 border-0 border-s border-gray-700 rounded-e hover:bg-gray-900 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">
+            Next
+            <svg class="w-3.5 h-3.5 ms-2 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+              fill="none" viewBox="0 0 14 10">
+              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M1 5h12m0 0L9 1m4 4L9 9" />
+            </svg>
+          </button>
         </div>
       </div>
       <div v-if="isModalOpen"
@@ -132,6 +163,16 @@ const emails = ref([]);
 const isModalOpen = ref(false);
 const selectedEmail = ref(null);
 
+// pagination 
+const totalPages = ref(0); // total pages
+const currentPage = ref(0); // page number 
+const pageSize = 15; // results per page 
+
+const changePage = (page) => {
+  currentPage.value = page;
+  searchEmails();
+};
+
 const searchEmails = async () => {
   try {
     const searchTerm = inputSearch.value;
@@ -142,7 +183,7 @@ const searchEmails = async () => {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ input: searchTerm }),
+      body: JSON.stringify({ input: searchTerm, page: currentPage.value, pageSize: 20}),
     });
 
     const data = await response.json();
@@ -150,6 +191,7 @@ const searchEmails = async () => {
 
     if (data && data.hits && data.hits.hits) {
       emails.value = data.hits.hits;
+      totalPages.value = Math.ceil(data.hits.total.value / pageSize)
       console.log('Emails:', emails);
     } else {
       emails.value = [];
